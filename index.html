@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap">
+<div class="page-head"><div><h1>Welcome to FRAME</h1><p>A premium community for developers and creators.</p></div><button class="btn btn-primary" onclick="goCreate()"><i class="ph-bold ph-plus"></i> New thread</button></div>
+<div id="announce"></div>
+<h3 class="cat-title">Latest discussions</h3>
+<div id="latest"></div>
+<h3 class="cat-title" style="margin-top:26px">Forums</h3>
+<div id="cats"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+var d=DB.get();
+var an=d.settings.announcement;
+if(an)document.getElementById('announce').innerHTML='<div class="card" style="border-color:#2970a355"><b><i class="ph-bold ph-megaphone"></i> Announcement</b><p style="margin:8px 0 0;color:var(--text-secondary)">'+esc(an)+'</p></div>';
+var ts=d.threads.slice().sort(function(a,b){return b.createdAt-a.createdAt;}).slice(0,6);
+document.getElementById('latest').innerHTML=ts.map(threadRowHTML).join('');
+var cats={};d.forums.forEach(function(f){(cats[f.cat]=cats[f.cat]||[]).push(f);});
+document.getElementById('cats').innerHTML=Object.keys(cats).map(function(c){
+  return '<div class="cat-block"><h3 class="cat-title">'+esc(c)+'</h3>'+cats[c].map(function(f){
+    var tc=d.threads.filter(function(t){return t.forumId===f.id;}).length;
+    return '<a class="forum-row" href="forum.html?id='+f.id+'"><div class="forum-ic"><i class="ph-bold '+f.icon+'"></i></div><div class="forum-main"><b>'+esc(f.name)+'</b><p>'+esc(f.desc)+'</p></div><div class="forum-stats"><div><b>'+tc+'</b><span>Threads</span></div></div></a>';
+  }).join('')+'</div>';
+}).join('');
+function threadRowHTML(t){
+  var u=DB.user(t.authorId)||{name:'Unknown',avatar:'',badge:''};
+  var price=t.type==='product'?'<div class="price-pill">'+(t.free?'FREE':esc(t.currency||'USD')+' '+t.price)+'</div>':'';
+  return '<a class="thread-row" href="thread.html?id='+t.id+'"><img class="thread-avatar" src="'+u.avatar+'" alt="">'
+  +'<div class="thread-main"><h3 class="thread-title">'+esc(t.title)+'</h3>'
+  +'<div class="thread-meta">'+badgeHTML(u.badge)+statusBadge(t.status)+'<span class="tmeta-text">'+esc(u.name)+' &middot; '+timeAgo(t.createdAt)+' &middot; '+esc((forumOf(t.forumId)||{}).name||'')+'</span></div>'
+  +'<p class="thread-excerpt">'+esc(t.excerpt||'')+'</p></div>'
+  +'<div class="thread-side"><b>'+threadReplies(t.id)+'</b><span>Replies</span></div>'+price+'</a>';
+}</script>
+</body>
+</html>
