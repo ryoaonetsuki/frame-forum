@@ -95,6 +95,26 @@ function toast(msg){var t=document.getElementById('toast');if(!t){t=document.cre
 function threadReplies(tid){return DB.get().posts.filter(function(p){return p.threadId===tid&&!p.parentId;}).length;}
 function forumOf(fid){return DB.get().forums.find(function(f){return f.id===fid;});}
 
+function fmtViews(v){v=+v||0;return v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'K':String(v);}
+function threadRowHTML(t,order){
+  var d=DB.get();
+  var u=d.users.find(function(x){return x.id===t.authorId})||{};
+  var f=d.forums.find(function(x){return x.id===t.forumId})||{};
+  var posts=d.posts.filter(function(p){return p.threadId===t.id;});
+  var last=posts.length?posts[posts.length-1]:null;
+  var lu=last?(d.users.find(function(x){return x.id===last.authorId})||{}):u;
+  var price=t.type==='product'?'<div class="thread-price">'+(t.free?'FREE':esc((t.currency||'USD')+' '+t.price))+'</div>':'';
+  var lastBox=t.type==='product'?'':'<div class="thread-last"><img src="'+(lu.avatar||'')+'" alt=""><div><b>'+esc(lu.name||'')+'</b><span>'+timeAgo(last?last.createdAt:t.createdAt)+'</span></div></div>';
+  return '<article class="thread-row'+(t.type==='product'?' product-row':'')+'" data-order="'+(order||0)+'" data-views="'+t.views+'" onclick="location.href=\'thread.html?id='+t.id+'\'">'
+    +'<img class="thread-avatar" src="'+(u.avatar||'')+'" alt="">'
+    +'<div class="thread-main"><h3 class="thread-title">'+esc(t.title)+'</h3>'
+    +'<div class="thread-meta">'+badgeHTML(u.badge)+statusBadge(t.status)+'<span class="tmeta-text">'+esc(u.name||'')+' &middot; '+timeAgo(t.createdAt)+' &middot; '+esc(f.name||'')+'</span></div>'
+    +'<p class="thread-excerpt">'+esc(t.excerpt||'')+'</p></div>'
+    +'<div class="thread-stats"><div class="tstat"><b>'+threadReplies(t.id)+'</b><span>Replies</span></div>'
+    +'<div class="tstat views"><b>'+fmtViews(t.views)+'</b><span>Views</span></div></div>'
+    +price+lastBox+'</article>';
+}
+
 /* ---------- shared chrome ---------- */
 var Chrome={
   header:function(){
@@ -178,7 +198,7 @@ function like(btn,pid){var liked=btn.classList.toggle('liked');var ic=btn.queryS
 /* expose */
 window.DB=DB;window.Auth=Auth;window.Chrome=Chrome;window.esc=esc;window.timeAgo=timeAgo;window.uid=uid;
 window.badgeHTML=badgeHTML;window.statusBadge=statusBadge;window.roleLabel=roleLabel;window.toast=toast;
-window.requireLogin=requireLogin;window.requireRole=requireRole;window.threadReplies=threadReplies;window.forumOf=forumOf;
+window.requireLogin=requireLogin;window.requireRole=requireRole;window.threadReplies=threadReplies;window.threadRowHTML=threadRowHTML;window.fmtViews=fmtViews;window.forumOf=forumOf;
 window.applyTheme=applyTheme;window.setTheme=setTheme;window.setSolidColor=setSolidColor;window.setGradient=setGradient;
 window.setCustomColor=setCustomColor;window.markActiveTheme=markActiveTheme;window.markActiveSwatch=markActiveSwatch;
 window.toggleAppearance=toggleAppearance;window.toggleSheet=toggleSheet;window.goCreate=goCreate;window.like=like;
