@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notifications &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1>Notifications</h1></div><button class="btn btn-ghost btn-sm" onclick="markAll()">Mark all read</button></div><div id="nlist"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+if(!requireLogin()){}
+function renderN(){
+  var me=Auth.me();var d=DB.get();
+  var ns=d.notifs.filter(function(n){return n.uid===me.id;}).sort(function(a,b){return b.createdAt-a.createdAt;});
+  document.getElementById('nlist').innerHTML=ns.length?ns.map(function(n){
+    return '<div class="notif-row'+(n.read?'':' unread')+'"><i class="ph-bold ph-bell" style="color:var(--accent);font-size:20px;margin-top:2px"></i><div><p>'+esc(n.text)+'</p><time>'+timeAgo(n.createdAt)+'</time></div></div>';
+  }).join(''):'<div class="empty">You are all caught up.</div>';
+}
+window.markAll=function(){var me=Auth.me();var d=DB.get();d.notifs.forEach(function(n){if(n.uid===me.id)n.read=true;});DB.set(d);renderN();toast('Marked as read');};
+renderN();</script>
+</body>
+</html>
