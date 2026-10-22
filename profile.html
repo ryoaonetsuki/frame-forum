@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div id="pwrap"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+var q=new URLSearchParams(location.search);var me=Auth.me();
+var u=DB.user(q.get('u'))||me;
+if(!u){document.getElementById('pwrap').innerHTML='<div class="empty">User not found.</div>';}
+else{
+var d=DB.get();var tab=q.get('tab')||'threads';
+var th=d.threads.filter(function(t){return t.authorId===u.id;});
+var isMe=me&&me.id===u.id;
+var html='<div class="prof-head"><img class="prof-avatar" src="'+u.avatar+'"><div><h1>'+esc(u.name)+'</h1><div style="margin:6px 0">'+badgeHTML(u.badge)+' <span class="role-pill '+u.role+'">'+roleLabel(u.role)+'</span></div><div style="color:var(--faint);font-size:12.5px">'+esc(u.title||'')+' &middot; Joined '+esc(u.joined||'')+'</div></div>'
++(isMe?'<div style="margin-left:auto"><a class="btn btn-ghost btn-sm" href="settings.html"><i class="ph-bold ph-pencil-simple"></i> Edit profile</a></div>':'')
++'</div>'
++'<div class="prof-stats"><div><b>'+th.length+'</b><span>Threads</span></div><div><b>'+u.msgs+'</b><span>Messages</span></div><div><b>'+u.likes+'</b><span>Likes</span></div></div>'
++(u.bio?'<p class="prof-bio">'+esc(u.bio)+'</p>':'')
++'<div class="tabs"><button class="'+(tab==='threads'?'active':'')+'" onclick="location.href=\'profile.html?u=\' +u.id+\'&tab=threads\'">Discussions</button><button class="'+(tab==='about'?'active':'')+'" onclick="location.href=\'profile.html?u=\' +u.id+\'&tab=about\'">About</button></div>';
+if(tab==='about'){
+  html+='<div class="card"><div class="field"><label>Bio</label><p style="margin:0;color:var(--text-secondary)">'+esc(u.bio||'No bio yet.')+'</p></div><div class="field"><label>Email</label><p style="margin:0">'+esc(u.email)+'</p></div><div class="field"><label>Member since</label><p style="margin:0">'+esc(u.joined||'')+'</p></div></div>';
+}else{
+  html+=th.length?th.map(function(t){return '<a class="thread-row" href="thread.html?id='+t.id+'"><div class="thread-main"><h3 class="thread-title">'+esc(t.title)+'</h3><div class="thread-meta">'+statusBadge(t.status)+'<span class="tmeta-text">'+timeAgo(t.createdAt)+' &middot; '+threadReplies(t.id)+' replies</span></div></div></a>';}).join(''):'<div class="empty">No discussions yet.</div>';
+}
+document.getElementById('pwrap').innerHTML=html;
+}</script>
+</body>
+</html>
