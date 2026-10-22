@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create post &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap">
+<div class="page-head"><div><h1 id="nttitle">Create post</h1><p>Share a discussion or sell a product.</p></div></div>
+<div class="card">
+<div class="tabs" style="margin-bottom:18px"><button class="active" id="tabD" onclick="setPT('discussion')">Discussion</button><button id="tabP" onclick="setPT('product')">Product</button></div>
+<div class="field"><label>Title</label><input id="fTitle" maxlength="140" placeholder="Give it a clear title"></div>
+<div class="field"><label>Forum</label><select id="fForum"></select></div>
+<div id="prodFields" style="display:none">
+  <div class="field"><label>Product image URL</label><input id="fImage" placeholder="https://..."></div>
+  <div class="field"><label>Live preview URL</label><input id="fPreview" placeholder="https://demo..."></div>
+  <div class="field"><label>Price</label><div style="display:flex;gap:8px"><input id="fPrice" type="number" min="0" step="0.01" placeholder="29.00" style="flex:1"><select id="fCur" style="width:110px;flex:none"><option>USD</option><option>EUR</option><option>GBP</option><option>BDT</option><option>INR</option></select><label style="display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap"><input type="checkbox" id="fFree" onchange="toggleFree(this.checked)"> Free</label></div></div>
+  <div class="field" id="buyWrap"><label>Buy link</label><input id="fBuy" placeholder="Stripe / Gumroad URL"></div>
+  <div id="freeWrap" style="display:none"><div class="field"><label>Free download link</label><input id="fDl"></div></div>
+</div>
+<div class="field"><label>Content</label><textarea id="fBody" placeholder="Write the details..."></textarea></div>
+<div class="field"><label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px"><input type="checkbox" id="fLock"> Lock content (likes/comments to unlock)</label></div>
+<button class="btn btn-primary btn-block" onclick="submitThread()"><i class="ph-bold ph-paper-plane-right"></i> <span id="submitLbl">Publish post</span></button>
+</div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('create');
+if(!requireLogin()){}
+var q=new URLSearchParams(location.search);var editId=q.get('edit');var d=DB.get();var PT='discussion';
+var fsel=document.getElementById('fForum');
+fsel.innerHTML=d.forums.map(function(f){return '<option value="'+f.id+'">'+esc(f.name)+'</option>';}).join('');
+if(q.get('forum'))fsel.value=q.get('forum');
+window.setPT=function(t){PT=t;document.getElementById('tabD').classList.toggle('active',t==='discussion');document.getElementById('tabP').classList.toggle('active',t==='product');document.getElementById('prodFields').style.display=t==='product'?'':'none';};
+window.toggleFree=function(on){document.getElementById('buyWrap').style.display=on?'none':'';document.getElementById('freeWrap').style.display=on?'':'none';};
+var editing=null;
+if(editId){
+  editing=d.threads.find(function(t){return t.id===editId;});
+  var me=Auth.me();
+  if(!editing||!me||(me.id!==editing.authorId&&['admin','superadmin','mod'].indexOf(me.role)<0)){location.href='index.html';}
+  else{
+    document.getElementById('nttitle').textContent='Edit post';document.getElementById('submitLbl').textContent='Save changes';
+    document.getElementById('fTitle').value=editing.title;fsel.value=editing.forumId;
+    var op=d.posts.find(function(p){return p.threadId===editId&&!p.parentId;});
+    if(op)document.getElementById('fBody').value=op.body;
+    if(editing.type==='product'){setPT('product');document.getElementById('fImage').value=editing.image||'';document.getElementById('fPreview').value=editing.previewUrl||'';document.getElementById('fPrice').value=editing.price||'';document.getElementById('fBuy').value=editing.buyUrl||'';if(editing.free){document.getElementById('fFree').checked=true;toggleFree(true);}}
+    var es=document.createElement('div');es.className='field';es.innerHTML='<label>Status</label><select id="fStatus"><option value="active">Active</option><option value="closed">Closed</option></select>';
+    document.getElementById('fBody').parentElement.after(es);document.getElementById('fStatus').value=editing.status||'active';
+  }
+}
+window.submitThread=function(){
+  var me=Auth.me();if(!me){location.href='login.html';return;}
+  var title=document.getElementById('fTitle').value.trim(),body=document.getElementById('fBody').value.trim(),fid=fsel.value;
+  if(!title){toast('Add a title');return;}if(!body){toast('Write some content');return;}
+  var d=DB.get();
+  if(editing){
+    editing.title=title;editing.forumId=fid;editing.excerpt=body.slice(0,140);
+    var st=document.getElementById('fStatus');if(st)editing.status=st.value;
+    if(PT==='product'){editing.image=document.getElementById('fImage').value.trim();editing.previewUrl=document.getElementById('fPreview').value.trim();editing.free=document.getElementById('fFree').checked;editing.price=parseFloat(document.getElementById('fPrice').value)||0;editing.buyUrl=document.getElementById('fBuy').value.trim();}
+    var op=d.posts.find(function(p){return p.threadId===editing.id&&!p.parentId;});if(op)op.body=body;
+    DB.set(d);toast('Post updated');location.href='thread.html?id='+editing.id;return;
+  }
+  var t={id:uid(),forumId:fid,title:title,authorId:me.id,createdAt:Date.now(),views:0,status:'active',type:PT,excerpt:body.slice(0,140)};
+  if(PT==='product'){t.price=parseFloat(document.getElementById('fPrice').value)||0;t.currency=document.getElementById('fCur').value;t.free=document.getElementById('fFree').checked;t.buyUrl=document.getElementById('fBuy').value.trim();t.buyLabel='Buy now';t.image=document.getElementById('fImage').value.trim();t.previewUrl=document.getElementById('fPreview').value.trim();t.downloadUrl=document.getElementById('fDl').value.trim();}
+  d.threads.unshift(t);
+  d.posts.push({id:uid(),threadId:t.id,authorId:me.id,body:body,createdAt:Date.now(),likes:0,parentId:null});
+  DB.set(d);toast('Published');location.href='thread.html?id='+t.id;
+};</script>
+</body>
+</html>
