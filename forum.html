@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forum &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1 id="fname"></h1><p id="fdesc"></p></div><button class="btn btn-primary" onclick="newInForum()"><i class="ph-bold ph-plus"></i> New thread</button></div><div class="tabs"><button class="active" onclick="sortBy('latest',this)">Latest</button><button onclick="sortBy('top',this)">Most viewed</button></div><div id="list"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('explore');
+var q=new URLSearchParams(location.search);var fid=q.get('id');var d=DB.get();
+var f=d.forums.find(function(x){return x.id===fid;});
+if(!f){document.querySelector(".page-wrap").innerHTML='<div class="empty">Forum not found. <a href="forums.html">Back to forums</a></div>';}
+else{
+document.getElementById('fname').textContent=f.name;document.getElementById('fdesc').textContent=f.desc;
+var ts=d.threads.filter(function(t){return t.forumId===fid;});
+function render(mode){
+  var arr=ts.slice().sort(function(a,b){return mode==='top'?b.views-a.views:b.createdAt-a.createdAt;});
+  document.getElementById('list').innerHTML=arr.length?arr.map(threadRowHTML).join(''):'<div class="empty">No threads yet. Be the first to post!</div>';
+  arr.forEach(function(t){t.views++;});DB.set(d);
+}
+window.sortBy=function(m,el){document.querySelectorAll('.tabs button').forEach(function(b){b.classList.remove('active');});el.classList.add('active');render(m);};
+window.newInForum=function(){if(!Auth.me()){location.href='login.html?next='+encodeURIComponent('new-thread.html?forum='+fid);return;}location.href='new-thread.html?forum='+fid;};
+render('latest');
+}
+function threadRowHTML(t){
+  var u=DB.user(t.authorId)||{name:'Unknown',avatar:'',badge:''};
+  var price=t.type==='product'?'<div class="price-pill">'+(t.free?'FREE':esc(t.currency||'USD')+' '+t.price)+'</div>':'';
+  return '<a class="thread-row" href="thread.html?id='+t.id+'"><img class="thread-avatar" src="'+u.avatar+'" alt="">'
+  +'<div class="thread-main"><h3 class="thread-title">'+esc(t.title)+'</h3>'
+  +'<div class="thread-meta">'+badgeHTML(u.badge)+statusBadge(t.status)+'<span class="tmeta-text">'+esc(u.name)+' &middot; '+timeAgo(t.createdAt)+'</span></div>'
+  +'<p class="thread-excerpt">'+esc(t.excerpt||'')+'</p></div>'
+  +'<div class="thread-side"><b>'+threadReplies(t.id)+'</b><span>Replies</span></div>'+price+'</a>';
+}</script>
+</body>
+</html>
