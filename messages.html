@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Messages &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1>Messages</h1><p>Private conversations.</p></div></div><div id="mwrap"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+if(!requireLogin()){}
+var me=Auth.me();var d=DB.get();var q=new URLSearchParams(location.search);var cid=q.get('c');
+if(!cid){
+  document.getElementById('mwrap').innerHTML=d.convos.map(function(c){
+    var u=DB.user(c.withId)||{name:'?'};var last=c.msgs[c.msgs.length-1];
+    return '<a class="convo-row" href="messages.html?c='+c.id+'"><img class="uavatar" style="width:44px;height:44px" src="'+(DB.user(c.withId)||{}).avatar+'"><div style="flex:1;min-width:0"><b>'+esc(u.name)+'</b><div style="font-size:12.5px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(last?last.text:'')+'</div></div><i class="ph-bold ph-caret-right" style="color:var(--faint)"></i></a>';
+  }).join('')||'<div class="empty">No conversations yet.</div>';
+}else{
+  var c=d.convos.find(function(x){return x.id===cid;});
+  if(!c){document.getElementById('mwrap').innerHTML='<div class="empty">Conversation not found.</div>';}
+  else{
+    var u=DB.user(c.withId);
+    document.getElementById('mwrap').innerHTML='<div class="page-head" style="margin-top:0"><div><h1 style="font-size:18px">'+esc(u.name)+'</h1></div><a class="btn btn-ghost btn-sm" href="messages.html">Back</a></div>'
+    +'<div class="chat-box" id="chat">'+c.msgs.map(function(m){return '<div class="msg-bubble '+(m.from===me.id?'msg-out':'msg-in')+'">'+esc(m.text)+'</div>';}).join('')+'</div>'
+    +'<div class="reply-composer"><textarea id="ctext" placeholder="Write a message..."></textarea><button class="btn btn-primary" onclick="sendMsg()">Send</button></div>';
+    window.sendMsg=function(){
+      var v=document.getElementById('ctext').value.trim();if(!v)return;
+      var d=DB.get();d.convos.find(function(x){return x.id===cid;}).msgs.push({from:me.id,text:v,at:Date.now()});DB.set(d);location.reload();
+    };
+  }
+}</script>
+</body>
+</html>
