@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Help &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap">
+<div class="page-head"><div><h1>Help &amp; feedback</h1><p>Rules, FAQ and contacting the team.</p></div></div>
+<div class="card"><h3 style="margin:0 0 10px"><i class="ph-bold ph-book-open"></i> Community guidelines</h3>
+<p style="color:var(--text-secondary);font-size:13.5px;line-height:1.7;margin:0">1. Be kind and respectful — no harassment, hate or personal attacks.<br>2. No spam, ads or misleading links.<br>3. Mark outdated products as <b>Closed</b> so buyers are not misled.<br>4. Keep discussions in the right forum.<br>5. Report problems instead of engaging with them.</p></div>
+<div class="card"><h3 style="margin:0 0 10px"><i class="ph-bold ph-question"></i> FAQ</h3>
+<div class="field"><label>How do I sell a product?</label><p style="margin:0;color:var(--text-secondary);font-size:13.5px">Create a post, switch to the <b>Product</b> tab, add your price, buy link, images and screenshots.</p></div>
+<div class="field"><label>What do Active / Closed mean?</label><p style="margin:0;color:var(--text-secondary);font-size:13.5px">Authors mark a post <b>Closed</b> when a shared app or product stops working. Check the badge before buying.</p></div>
+<div class="field"><label>How do I become a moderator?</label><p style="margin:0;color:var(--text-secondary);font-size:13.5px">Stay active, be helpful, and the team will notice. Admins can promote members.</p></div></div>
+<div class="card"><h3 style="margin:0 0 14px"><i class="ph-bold ph-envelope"></i> Contact us</h3>
+<div class="field"><label>Subject</label><input id="cSub" placeholder="What is this about?"></div>
+<div class="field"><label>Message</label><textarea id="cMsg" placeholder="Describe your issue..."></textarea></div>
+<button class="btn btn-primary" onclick="sendFeedback()">Send feedback</button></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');window.sendFeedback=function(){var s=document.getElementById('cSub').value.trim(),m=document.getElementById('cMsg').value.trim();if(!s||!m){toast('Fill in subject and message');return;}document.getElementById('cSub').value='';document.getElementById('cMsg').value='';toast('Thanks! The team will review your feedback.');};</script>
+</body>
+</html>
