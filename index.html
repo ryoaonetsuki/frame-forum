@@ -14,12 +14,30 @@
 <body>
 <div id="chrome-header"></div>
 <main class="page-wrap">
-<div class="page-head"><div><h1>Welcome to FRAME</h1><p>A premium community for developers and creators.</p></div><button class="btn btn-primary" onclick="goCreate()"><i class="ph-bold ph-plus"></i> New thread</button></div>
-<div id="announce"></div>
-<h3 class="cat-title">Latest discussions</h3>
-<div id="latest"></div>
-<h3 class="cat-title" style="margin-top:26px">Forums</h3>
-<div id="cats"></div></main>
+<div class="announce" id="announce" hidden></div>
+<section class="creator-form" id="creatorForm">
+  <h3>Create post</h3>
+  <p>Start a discussion, ask a question, share a project &mdash; or sell a digital product.</p>
+  <div class="post-type-tabs" role="tablist" aria-label="Post type">
+    <button type="button" class="pt-tab active" onclick="location.href='new-thread.html?type=discussion'"><i class="ph-bold ph-chats-circle"></i>Discussion</button>
+    <button type="button" class="pt-tab" onclick="location.href='new-thread.html?type=product'"><i class="ph-bold ph-shopping-bag"></i>Product</button>
+  </div>
+  <div class="creator-form-actions"><button class="btn btn-primary" onclick="goCreate()"><i class="ph-bold ph-plus"></i> Start writing</button></div>
+</section>
+<div class="layout">
+  <div>
+    <div class="thread-tabs" role="tablist" aria-label="Thread sorting">
+      <button class="thread-tab active" data-sort="latest" onclick="sortFeed('latest',this)">Latest</button>
+      <button class="thread-tab" data-sort="trending" onclick="sortFeed('trending',this)">Trending</button>
+    </div>
+    <div class="feed" id="discussionFeed"></div>
+  </div>
+  <aside class="sidebar">
+    <div class="side-card"><div class="side-title">Popular discussions <i class="ph-bold ph-trend-up"></i></div><div id="popList"></div></div>
+    <div class="side-card"><div class="side-title">Around right now <span class="online-count"><span class="online-dot"></span> <span id="onlineCt"></span> online</span></div><div id="onlineList"></div><button class="btn btn-ghost btn-small" onclick="location.href='members.html'">View all members</button></div>
+    <div class="side-card"><div class="side-title">Community stats</div><div class="stat-grid" id="statGrid"></div></div>
+  </aside>
+</div></main>
 <div id="chrome-footer"></div>
 <div id="chrome-nav"></div>
 <div id="chrome-sheet"></div>
@@ -28,24 +46,30 @@
 <script>applyTheme();Chrome.mount('home');
 var d=DB.get();
 var an=d.settings.announcement;
-if(an)document.getElementById('announce').innerHTML='<div class="card" style="border-color:#2970a355"><b><i class="ph-bold ph-megaphone"></i> Announcement</b><p style="margin:8px 0 0;color:var(--text-secondary)">'+esc(an)+'</p></div>';
-var ts=d.threads.slice().sort(function(a,b){return b.createdAt-a.createdAt;}).slice(0,6);
-document.getElementById('latest').innerHTML=ts.map(threadRowHTML).join('');
-var cats={};d.forums.forEach(function(f){(cats[f.cat]=cats[f.cat]||[]).push(f);});
-document.getElementById('cats').innerHTML=Object.keys(cats).map(function(c){
-  return '<div class="cat-block"><h3 class="cat-title">'+esc(c)+'</h3>'+cats[c].map(function(f){
-    var tc=d.threads.filter(function(t){return t.forumId===f.id;}).length;
-    return '<a class="forum-row" href="forum.html?id='+f.id+'"><div class="forum-ic"><i class="ph-bold '+f.icon+'"></i></div><div class="forum-main"><b>'+esc(f.name)+'</b><p>'+esc(f.desc)+'</p></div><div class="forum-stats"><div><b>'+tc+'</b><span>Threads</span></div></div></a>';
-  }).join('')+'</div>';
+if(an){var ae=document.getElementById('announce');ae.hidden=false;ae.innerHTML='<b><i class="ph-bold ph-megaphone"></i> Announcement</b><p>'+esc(an)+'</p>';}
+var allThreads=d.threads.slice();
+function renderFeed(list){document.getElementById('discussionFeed').innerHTML=list.map(function(t,i){return threadRowHTML(t,i);}).join('');}
+function sortFeed(mode,btn){
+  document.querySelectorAll('.thread-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  var list=allThreads.slice();
+  if(mode==='trending')list.sort(function(a,b){return b.views-a.views;});
+  else list.sort(function(a,b){return b.createdAt-a.createdAt;});
+  renderFeed(list);
+}
+renderFeed(allThreads.slice().sort(function(a,b){return b.createdAt-a.createdAt;}));
+var pop=allThreads.slice().sort(function(a,b){return b.views-a.views;}).slice(0,4);
+document.getElementById('popList').innerHTML=pop.map(function(t,i){
+  var f=forumOf(t.forumId)||{};
+  return '<div class="trend" onclick="location.href=\'thread.html?id='+t.id+'\'"><div class="trend-num">0'+(i+1)+'</div><div><div class="trend-name">'+esc(t.title)+'</div><div class="trend-meta">'+threadReplies(t.id)+' posts &middot; '+esc(f.name||'')+'</div></div></div>';
 }).join('');
-function threadRowHTML(t){
-  var u=DB.user(t.authorId)||{name:'Unknown',avatar:'',badge:''};
-  var price=t.type==='product'?'<div class="price-pill">'+(t.free?'FREE':esc(t.currency||'USD')+' '+t.price)+'</div>':'';
-  return '<a class="thread-row" href="thread.html?id='+t.id+'"><img class="thread-avatar" src="'+u.avatar+'" alt="">'
-  +'<div class="thread-main"><h3 class="thread-title">'+esc(t.title)+'</h3>'
-  +'<div class="thread-meta">'+badgeHTML(u.badge)+statusBadge(t.status)+'<span class="tmeta-text">'+esc(u.name)+' &middot; '+timeAgo(t.createdAt)+' &middot; '+esc((forumOf(t.forumId)||{}).name||'')+'</span></div>'
-  +'<p class="thread-excerpt">'+esc(t.excerpt||'')+'</p></div>'
-  +'<div class="thread-side"><b>'+threadReplies(t.id)+'</b><span>Replies</span></div>'+price+'</a>';
-}</script>
+var onUsers=d.users.filter(function(u){return !u.banned;}).slice(0,3);
+document.getElementById('onlineCt').textContent='1,204';
+document.getElementById('onlineList').innerHTML=onUsers.map(function(u){
+  return '<div class="online-row"><img src="'+u.avatar+'" alt="'+esc(u.name)+'"><div><div class="online-name">'+esc(u.name)+' '+badgeHTML(u.badge)+'</div><div class="online-role">'+roleLabel(u.role)+'</div></div><span class="online-status"></span></div>';
+}).join('');
+var totalPosts=d.posts.length,totalViews=d.threads.reduce(function(a,t){return a+t.views;},0);
+document.getElementById('statGrid').innerHTML='<div class="stat"><b>'+d.threads.length+'</b><span>Threads</span></div><div class="stat"><b>'+totalPosts+'</b><span>Posts</span></div><div class="stat"><b>'+fmtViews(totalViews)+'</b><span>Views</span></div><div class="stat"><b>'+d.users.length+'</b><span>Members</span></div>';
+</script>
 </body>
 </html>
