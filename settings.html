@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap">
+<div class="page-head"><div><h1>Settings</h1><p>Manage your profile and preferences.</p></div></div>
+<div class="card"><h3 style="margin:0 0 14px">Profile</h3>
+<div class="field"><label>Display name</label><input id="sName"></div>
+<div class="field"><label>Bio</label><textarea id="sBio" style="min-height:80px"></textarea></div>
+<div class="field"><label>Avatar URL</label><input id="sAvatar"></div>
+<button class="btn btn-primary" onclick="saveProfile()">Save profile</button></div>
+<div class="card"><h3 style="margin:0 0 14px">Password</h3>
+<div class="field"><label>New password</label><input id="sPass" type="password" placeholder="Min 6 characters"></div>
+<button class="btn btn-ghost" onclick="savePass()">Change password</button></div>
+<div class="card"><h3 style="margin:0 0 14px">Appearance</h3>
+<p style="color:var(--text-secondary);font-size:13px">Theme and accent color.</p>
+<button class="btn btn-ghost" onclick="toggleAppearance(true)"><i class="ph-bold ph-palette"></i> Open appearance</button></div>
+<div class="card"><h3 style="margin:0 0 14px">Danger zone</h3>
+<button class="btn btn-danger" onclick="if(confirm('Reset all demo data?')){DB.reset();location.href='index.html';}">Reset demo data</button></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+if(!requireLogin()){}
+var me=Auth.me();
+document.getElementById('sName').value=me.name;document.getElementById('sBio').value=me.bio||'';document.getElementById('sAvatar').value=me.avatar;
+window.saveProfile=function(){
+  var d=DB.get();var u=d.users.find(function(x){return x.id===me.id;});
+  u.name=document.getElementById('sName').value.trim()||u.name;u.bio=document.getElementById('sBio').value.trim();u.avatar=document.getElementById('sAvatar').value.trim()||u.avatar;
+  DB.set(d);toast('Profile saved');location.reload();
+};
+window.savePass=function(){
+  var p=document.getElementById('sPass').value;if(p.length<6){toast('Min 6 characters');return;}
+  var d=DB.get();d.users.find(function(x){return x.id===me.id;}).pass=p;DB.set(d);toast('Password changed');document.getElementById('sPass').value='';
+};</script>
+</body>
+</html>
