@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Register &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap">
+<div class="auth-wrap"><div class="auth-card">
+<h1>Create account</h1><p class="sub">Join FRAME in seconds.</p>
+<button class="google-btn" onclick="gReg()"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.3H12v4.5h6.5c-.1 1.1-.8 2.7-2.4 3.8l-.1.1 3.5 2.7.2.1c2.2-2 3.8-5 3.8-8.9z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.8-2.9c-1 .7-2.4 1.2-4.1 1.2-3.1 0-5.8-2.1-6.8-5l-.1.1-3.6 2.8-.1.1C3.5 21.3 7.4 24 12 24z"/><path fill="#FBBC05" d="M5.2 14.4c-.2-.7-.4-1.5-.4-2.4s.1-1.7.4-2.4l-.1-.1-3.6-2.8-.1.1C.5 8.5 0 10.1 0 12s.5 3.5 1.4 5.2l3.8-2.8z"/><path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l3.3-3.2.1-.1C17.9 1.1 15.2 0 12 0 7.4 0 3.5 2.7 1.4 6.8l3.8 2.9c1-2.9 3.7-5 6.8-5z"/></svg> Continue with Google</button>
+<div class="or-div">or</div>
+<div class="ferr" id="err"></div>
+<div class="field"><label>Display name</label><input id="name" placeholder="Your name"></div>
+<div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+<div class="field"><label>Password</label><input id="pass" type="password" placeholder="Min 6 characters"></div>
+<button class="btn btn-primary btn-block" onclick="doReg()">Create account</button>
+<div class="auth-alt">Already have an account? <a href="login.html">Log in</a></div>
+</div></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+if(Auth.me())location.href='index.html';
+window.doReg=function(){
+  var n=document.getElementById('name').value.trim(),e=document.getElementById('email').value.trim(),p=document.getElementById('pass').value;
+  var er=document.getElementById('err');
+  if(n.length<2){er.textContent='Please enter your name.';er.style.display='block';return;}
+  if(e.indexOf('@')<0){er.textContent='Enter a valid email.';er.style.display='block';return;}
+  if(p.length<6){er.textContent='Password must be at least 6 characters.';er.style.display='block';return;}
+  var r=Auth.register(n,e,p);
+  if(r.err){er.textContent=r.err;er.style.display='block';return;}
+  location.href='index.html';
+};
+window.gReg=function(){
+  var name=prompt('Demo Google sign-up — enter your name:','Google User');if(name===null)return;
+  var email=prompt('Enter your Google email:','user@gmail.com');if(!email)return;
+  var r=Auth.google(name.trim()||'Google User',email.trim());
+  if(r.err){toast(r.err);return;}location.href='index.html';
+};</script>
+</body>
+</html>
