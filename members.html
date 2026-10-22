@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Members &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1>Members</h1><p>Everyone in the community.</p></div></div><div class="card"><div class="field" style="margin:0"><input id="mq" placeholder="Search members..." oninput="renderM()"></div></div><div id="mlist"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+window.renderM=function(){
+  var kw=(document.getElementById('mq').value||'').toLowerCase();var d=DB.get();
+  var us=d.users.filter(function(u){return !u.banned&&u.name.toLowerCase().indexOf(kw)>=0;});
+  document.getElementById('mlist').innerHTML=us.map(function(u){
+    return '<a class="convo-row" href="profile.html?u='+u.id+'"><img class="uavatar" style="width:44px;height:44px" src="'+u.avatar+'"><div style="flex:1"><b>'+esc(u.name)+'</b> '+badgeHTML(u.badge)+'<div style="font-size:12px;color:var(--faint)">'+esc(u.title||roleLabel(u.role))+' &middot; '+u.msgs+' messages</div></div><span class="role-pill '+u.role+'">'+roleLabel(u.role)+'</span></a>';
+  }).join('')||'<div class="empty">No members found.</div>';
+};renderM();</script>
+</body>
+</html>
