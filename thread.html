@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thread &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div id="twrap"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+var q=new URLSearchParams(location.search);var tid=q.get('id');var d=DB.get();
+var t=d.threads.find(function(x){return x.id===tid;});
+if(!t){document.getElementById('twrap').innerHTML='<div class="empty">Thread not found. <a href="index.html">Back home</a></div>';}
+else{
+t.views++;DB.set(d);
+var me=Auth.me();
+var author=DB.user(t.authorId)||{name:'Unknown',avatar:'',badge:'',title:'',joined:'',msgs:0,likes:'0'};
+var canMod=me&&(me.id===t.authorId||['admin','superadmin','mod'].indexOf(me.role)>=0);
+var html='';
+/* product hero */
+if(t.type==='product'){
+  html+='<div class="ph-wrap"><div class="ph-inner"><span class="ph-badge"><i class="ph-bold ph-shopping-bag"></i> Product</span><h1 class="ph-title">'+esc(t.title)+'</h1><div class="ph-seller">by <b>'+esc(author.name)+'</b> '+badgeHTML(author.badge)+'</div></div>'
+  +'<div style="padding:0 26px 26px"><div class="ph-media"><img src="'+esc(t.image||'')+'" alt=""><a class="ph-preview" href="'+esc(t.previewUrl||'#')+'" target="_blank"><i class="ph-bold ph-eye"></i> Live preview</a></div>'
+  +'<div class="ph-shots">'+(t.shots||[]).map(function(s){return '<img src="'+esc(s)+'" onclick="this.parentElement.previousElementSibling.querySelector(\'img\').src=this.src">';}).join('')+'</div>'
+  +'<div class="ph-buybar"><div class="ph-price'+(t.free?' free':'')+'">'+(t.free?'FREE':esc(t.currency||'USD')+' '+t.price)+'</div><a class="btn btn-primary" href="'+esc(t.free?(t.downloadUrl||'#'):(t.buyUrl||'#'))+'" target="_blank"><i class="ph-bold ph-shopping-cart"></i> '+(t.free?'Get for free':esc(t.buyLabel||'Buy now'))+'</a></div>'
+  +'<div class="ph-desc"><p>'+esc(t.excerpt||'')+'</p></div><div class="ph-secure">'+(t.free?'Free download':'Secure checkout via external link')+'</div></div></div>';
+}
+/* OP postbit */
+var ops=d.posts.filter(function(p){return p.threadId===tid&&!p.parentId;});
+var op=ops[0];
+html+='<article class="fpost"><aside class="fpost-user"><img class="fpost-avatar" src="'+author.avatar+'" alt=""><div class="fpost-id"><div class="fpost-uname">'+esc(author.name)+'</div>'+badgeHTML(author.badge)+'</div><div class="fpost-utitle">'+esc(author.title||'')+'</div><dl class="fpost-meta"><div><dt>Joined</dt><dd>'+esc(author.joined||'')+'</dd></div><div><dt>Messages</dt><dd>'+author.msgs+'</dd></div><div><dt>Likes</dt><dd>'+author.likes+'</dd></div></dl></aside>'
++'<div class="fpost-main"><header class="fpost-top"><span>'+timeAgo(t.createdAt)+'</span><span>'+statusBadge(t.status)+' <span class="fpost-num">#1</span></span></header><div class="fpost-body">'
++(t.type!=='product'?'<h1 class="fpost-heading">'+esc(t.title)+'</h1>':'')
++(op?'<p>'+esc(op.body).replace(/\n/g,'<br>')+'</p>':'<p>'+esc(t.excerpt||'')+'</p>')
++'</div><footer class="fpost-actions">'
++'<button class="action like-btn" onclick="like(this)"><i class="ph ph-heart"></i><span>'+(op?op.likes:0)+'</span></button>'
++'<button class="action" onclick="document.getElementById(\'replyBox\').scrollIntoView({behavior:\'smooth\'})"><i class="ph ph-chat-circle"></i> '+threadReplies(tid)+' replies</button>'
++'<button class="action" onclick="saveThread(\''+t.id+'\')"><i class="ph ph-bookmark"></i> Save</button>'
++(canMod?'<button class="action" onclick="editThread(\''+t.id+'\')"><i class="ph-bold ph-pencil-simple"></i> Edit</button>':'')
++'</footer></div></article>';
+/* replies */
+var reps=d.posts.filter(function(p){return p.threadId===tid&&p.parentId;});
+var tops=d.posts.filter(function(p){return p.threadId===tid&&!p.parentId;}).slice(1);
+var all=tops.concat(reps);
+html+='<div class="replies-heading" style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px"><h2 style="margin:0;font-size:17px">Replies <span style="color:var(--faint);font-size:12px">'+all.length+'</span></h2></div><div id="replies">'+all.map(replyHTML).join('')+'</div>';
+/* composer */
+html+=me?'<div class="reply-composer" id="replyBox"><img class="userpic" src="'+me.avatar+'"><textarea id="replyText" placeholder="Write a thoughtful reply..."></textarea><button class="btn btn-primary" onclick="postReply()"><i class="ph-bold ph-paper-plane-right"></i> Reply</button></div>'
+:'<div class="card" style="text-align:center"><a class="btn btn-primary" href="login.html?next='+encodeURIComponent('thread.html?id='+tid)+'">Log in to reply</a></div>';
+document.getElementById('twrap').innerHTML=html;
+}
+function replyHTML(p){
+  var u=DB.user(p.authorId)||{name:'?',avatar:'',badge:''};
+  var kids=DB.get().posts.filter(function(x){return x.parentId===p.id;});
+  return '<article class="fpost freply"><img class="fr-avatar" src="'+u.avatar+'"><div class="fr-main"><div class="fr-head"><span class="fr-name">'+esc(u.name)+'</span>'+badgeHTML(u.badge)+'<span class="fr-time">'+timeAgo(p.createdAt)+'</span></div>'
+  +'<div class="fr-body"><p>'+esc(p.body)+'</p></div>'
+  +'<div class="fr-actions"><button class="fr-action like-btn" onclick="like(this,\''+p.id+'\')"><i class="ph ph-heart"></i><span>'+p.likes+'</span></button><button class="fr-action" onclick="replyTo(this,\''+p.id+'\')">Reply</button></div>'
+  +'<div class="fr-children">'+kids.map(replyHTML).join('')+'</div></div></article>';
+}
+window.postReply=function(){
+  var me=Auth.me();if(!me){location.href='login.html';return;}
+  var v=document.getElementById('replyText').value.trim();if(!v){toast('Write something first');return;}
+  var d=DB.get();d.posts.push({id:uid(),threadId:tid,authorId:me.id,body:v,createdAt:Date.now(),likes:0,parentId:null});DB.set(d);location.reload();
+};
+window.replyTo=function(btn,pid){
+  var me=Auth.me();if(!me){location.href='login.html';return;}
+  var main=btn.closest('.fr-main');var ex=main.querySelector(':scope > .fr-composer');if(ex){ex.remove();return;}
+  var c=document.createElement('div');c.className='fr-composer';
+  c.innerHTML='<img src="'+me.avatar+'"><div class="fr-cbox"><textarea placeholder="Write a reply..."></textarea><div class="fr-cbtns"><button class="btn btn-primary btn-sm" data-pid="'+pid+'">Reply</button><button class="btn btn-ghost btn-sm">Cancel</button></div></div>';
+  main.insertBefore(c,main.querySelector(':scope > .fr-children'));c.querySelector('textarea').focus();
+  c.querySelector('.btn-ghost').onclick=function(){c.remove();};
+  c.querySelector('.btn-primary').onclick=function(){
+    var v=c.querySelector('textarea').value.trim();if(!v){toast('Write something first');return;}
+    var d=DB.get();d.posts.push({id:uid(),threadId:tid,authorId:me.id,body:v,createdAt:Date.now(),likes:0,parentId:pid});DB.set(d);location.reload();
+  };
+};
+window.saveThread=function(id){
+  var me=Auth.me();if(!me){location.href='login.html';return;}
+  var d=DB.get();d.saved[me.id]=d.saved[me.id]||[];var i=d.saved[me.id].indexOf(id);
+  if(i>=0){d.saved[me.id].splice(i,1);toast('Removed from saved');}else{d.saved[me.id].push(id);toast('Saved');}DB.set(d);
+};
+window.editThread=function(id){location.href='new-thread.html?edit='+id;};
+</script>
+</body>
+</html>
