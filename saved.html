@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saved &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1>Saved items</h1><p>Threads you bookmarked for later.</p></div></div><div id="slist"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+if(!requireLogin()){}
+var me=Auth.me();var d=DB.get();var ids=d.saved[me.id]||[];
+var th=ids.map(function(id){return d.threads.find(function(t){return t.id===id;});}).filter(Boolean);
+document.getElementById('slist').innerHTML=th.length?th.map(function(t){
+  var u=DB.user(t.authorId)||{name:'?',avatar:'',badge:''};
+  return '<a class="thread-row" href="thread.html?id='+t.id+'"><img class="thread-avatar" src="'+u.avatar+'"><div class="thread-main"><h3 class="thread-title">'+esc(t.title)+'</h3><div class="thread-meta">'+badgeHTML(u.badge)+statusBadge(t.status)+'<span class="tmeta-text">'+esc(u.name)+' &middot; '+timeAgo(t.createdAt)+'</span></div></div></a>';
+}).join(''):'<div class="empty">Nothing saved yet. Tap <b>Save</b> on any thread.</div>';</script>
+</body>
+</html>
