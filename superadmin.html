@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super Admin &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1><i class="ph-fill ph-crown"></i> Super Admin</h1><p>Full control over the community.</p></div></div><div class="admin-tabs"><button class="active" data-tab="admins" onclick="showTab2('admins')">Admins</button><button data-tab="users" onclick="showTab2('users')">Users</button><button data-tab="threads" onclick="showTab2('threads')">Threads</button><button data-tab="site" onclick="showTab2('site')">Site settings</button></div><div id="atab"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');if(!requireRole(["superadmin"])){}
+
+var me=Auth.me();
+function canManageUsers(){return me&&(me.role==='admin'||me.role==='superadmin');}
+function canManageAdmins(){return me&&me.role==='superadmin';}
+function renderDash(){
+  var d=DB.get();
+  document.getElementById('atab').innerHTML='<div class="stat-cards">'
+  +'<div class="stat-card"><b>'+d.users.length+'</b><span>Total users</span></div>'
+  +'<div class="stat-card"><b>'+d.threads.length+'</b><span>Threads</span></div>'
+  +'<div class="stat-card"><b>'+d.posts.length+'</b><span>Posts</span></div>'
+  +'<div class="stat-card"><b>'+d.reports.filter(function(r){return r.status==='open';}).length+'</b><span>Open reports</span></div></div>'
+  +'<div class="card"><h3 style="margin:0 0 10px">Quick actions</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="showTab(\'users\')">Manage users</button><button class="btn btn-ghost btn-sm" onclick="showTab(\'threads\')">Manage threads</button><button class="btn btn-ghost btn-sm" onclick="showTab(\'reports\')">Review reports</button></div></div>';
+}
+function renderUsers(){
+  if(!canManageUsers()){document.getElementById('atab').innerHTML='<div class="empty">Only admins can manage users.</div>';return;}
+  var d=DB.get();
+  document.getElementById('atab').innerHTML='<div class="card" style="overflow-x:auto"><table class="atable"><tr><th>User</th><th>Role</th><th>Joined</th><th>Actions</th></tr>'
+  +d.users.map(function(u){
+    var self=u.id===me.id;
+    var roleSel=(canManageAdmins()&&!self)?'<select onchange="setRole(\''+u.id+'\',this.value)"><option value="member"'+(u.role==='member'?' selected':'')+'>Member</option><option value="mod"'+(u.role==='mod'?' selected':'')+'>Moderator</option><option value="admin"'+(u.role==='admin'?' selected':'')+'>Admin</option></select>':'<span class="role-pill '+u.role+'">'+roleLabel(u.role)+'</span>';
+    var banBtn=(!self&&u.role!=='superadmin')?'<button class="btn '+(u.banned?'btn-ghost':'btn-danger')+' btn-sm" onclick="toggleBan(\''+u.id+'\')">'+(u.banned?'Unban':'Ban')+'</button>':'';
+    return '<tr><td><img class="uavatar" src="'+u.avatar+'"><b>'+esc(u.name)+'</b><div style="font-size:11px;color:var(--faint)">'+esc(u.email)+'</div></td><td>'+roleSel+'</td><td>'+esc(u.joined||'')+'</td><td style="white-space:nowrap">'+banBtn+'</td></tr>';
+  }).join('')+'</table></div>';
+}
+function renderThreads(){
+  var d=DB.get();
+  document.getElementById('atab').innerHTML='<div class="card" style="overflow-x:auto"><table class="atable"><tr><th>Thread</th><th>Author</th><th>Status</th><th>Actions</th></tr>'
+  +d.threads.map(function(t){
+    var u=DB.user(t.authorId)||{name:'?'};
+    return '<tr><td><a href="thread.html?id='+t.id+'" style="color:var(--text);text-decoration:none;font-weight:600">'+esc(t.title)+'</a><div style="font-size:11px;color:var(--faint)">'+timeAgo(t.createdAt)+' &middot; '+t.views+' views</div></td><td>'+esc(u.name)+'</td><td>'+statusBadge(t.status)+'</td>'
+    +'<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="toggleStatus(\''+t.id+'\')">'+(t.status==='closed'?'Reopen':'Close')+'</button> <button class="btn btn-ghost btn-sm" onclick="togglePin(\''+t.id+'\')">'+(t.pinned?'Unpin':'Pin')+'</button> <button class="btn btn-danger btn-sm" onclick="delThread(\''+t.id+'\')">Delete</button></td></tr>';
+  }).join('')+'</table></div>';
+}
+function renderReports(){
+  var d=DB.get();
+  document.getElementById('atab').innerHTML=d.reports.length?d.reports.map(function(r){
+    var t=DB.thread(r.id==='r1'?'t2':r.threadId)||DB.get().threads.find(function(x){return x.id===r.threadId;});
+    var by=DB.user(r.byId)||{name:'?'};
+    return '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b>Report</b> by '+esc(by.name)+' &middot; <span style="color:var(--faint);font-size:12px">'+timeAgo(r.createdAt)+'</span><p style="margin:8px 0;color:var(--text-secondary)">'+esc(r.reason)+'</p>'+(t?'<a href="thread.html?id='+t.id+'" style="color:var(--accent)">'+esc(t.title)+'</a>':'')+'</div><div><span class="role-pill">'+r.status+'</span></div></div>'
+    +(r.status==='open'?'<div style="margin-top:12px;display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="resolveReport(\''+r.id+'\',\'resolved\')">Resolve</button><button class="btn btn-ghost btn-sm" onclick="resolveReport(\''+r.id+'\',\'dismissed\')">Dismiss</button></div>':'')
+    +'</div>';
+  }).join(''):'<div class="empty">No reports.</div>';
+}
+window.showTab=function(t){
+  document.querySelectorAll('.admin-tabs button').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
+  ({dashboard:renderDash,users:renderUsers,threads:renderThreads,reports:renderReports})[t]();
+};
+window.toggleBan=function(id){var d=DB.get();var u=d.users.find(function(x){return x.id===id;});u.banned=!u.banned;DB.set(d);toast(u.banned?'User banned':'User unbanned');renderUsers();};
+window.setRole=function(id,role){var d=DB.get();d.users.find(function(x){return x.id===id;}).role=role;DB.set(d);toast('Role updated to '+roleLabel(role));renderUsers();};
+window.toggleStatus=function(id){var d=DB.get();var t=d.threads.find(function(x){return x.id===id;});t.status=t.status==='closed'?'active':'closed';DB.set(d);toast('Thread '+(t.status==='closed'?'closed':'reopened'));renderThreads();};
+window.togglePin=function(id){var d=DB.get();var t=d.threads.find(function(x){return x.id===id;});t.pinned=!t.pinned;DB.set(d);toast(t.pinned?'Pinned':'Unpinned');renderThreads();};
+window.delThread=function(id){if(!confirm('Delete this thread and all its posts?'))return;var d=DB.get();d.threads=d.threads.filter(function(x){return x.id!==id;});d.posts=d.posts.filter(function(x){return x.threadId!==id;});DB.set(d);toast('Thread deleted');renderThreads();};
+window.resolveReport=function(id,st){var d=DB.get();d.reports.find(function(x){return x.id===id;}).status=st;DB.set(d);toast('Report '+st);renderReports();};
+
+function renderAdmins(){
+  var d=DB.get();var admins=d.users.filter(function(u){return u.role==='admin'||u.role==='superadmin';});
+  var members=d.users.filter(function(u){return u.role==='member'||u.role==='mod';});
+  document.getElementById('atab').innerHTML='<div class="card"><h3 style="margin:0 0 12px">Current admins</h3>'
+  +admins.map(function(u){
+    var self=u.id===me.id;
+    return '<div class="convo-row" style="cursor:default"><img class="uavatar" style="width:40px;height:40px" src="'+u.avatar+'"><div style="flex:1"><b>'+esc(u.name)+'</b><div style="font-size:12px;color:var(--faint)">'+esc(u.email)+'</div></div><span class="role-pill '+u.role+'">'+roleLabel(u.role)+'</span>'+(self||u.role==='superadmin'?'':'<button class="btn btn-danger btn-sm" onclick="demoteAdmin(\''+u.id+'\')">Demote</button>')+'</div>';
+  }).join('')+'</div>'
+  +'<div class="card"><h3 style="margin:0 0 12px">Promote to admin</h3><div class="field"><select id="promoteSel">'+members.map(function(u){return '<option value="'+u.id+'">'+esc(u.name)+' ('+roleLabel(u.role)+')</option>';}).join('')+'</select></div><button class="btn btn-primary" onclick="promoteAdmin()">Promote to admin</button></div>';
+}
+function renderSite(){
+  var d=DB.get();
+  document.getElementById('atab').innerHTML='<div class="card"><h3 style="margin:0 0 14px">Site settings</h3>'
+  +'<div class="field"><label>Site name</label><input id="siteName" value="'+esc(d.settings.siteName)+'"></div>'
+  +'<div class="field"><label>Announcement banner</label><textarea id="siteAnn" style="min-height:70px" placeholder="Shown on the homepage...">'+esc(d.settings.announcement||'')+'</textarea></div>'
+  +'<div class="field"><label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:13px"><input type="checkbox" id="siteReg" '+(d.settings.registrationOpen?'checked':'')+'> Registration open</label></div>'
+  +'<button class="btn btn-primary" onclick="saveSite()">Save settings</button></div>'
+  +'<div class="card"><h3 style="margin:0 0 14px">Danger zone</h3><button class="btn btn-danger" onclick="if(confirm(\'Reset ALL demo data?\')){DB.reset();location.reload();}">Reset all demo data</button></div>';
+}
+window.showTab2=function(t){
+  document.querySelectorAll('.admin-tabs button').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t);});
+  ({admins:renderAdmins,users:renderUsers,threads:renderThreads,site:renderSite})[t]();
+};
+window.promoteAdmin=function(){var id=document.getElementById('promoteSel').value;var d=DB.get();d.users.find(function(x){return x.id===id;}).role='admin';DB.set(d);toast('Promoted to admin');renderAdmins();};
+window.demoteAdmin=function(id){if(!confirm('Demote this admin to member?'))return;var d=DB.get();d.users.find(function(x){return x.id===id;}).role='member';DB.set(d);toast('Demoted to member');renderAdmins();};
+window.saveSite=function(){var d=DB.get();d.settings.siteName=document.getElementById('siteName').value.trim()||'FRAME';d.settings.announcement=document.getElementById('siteAnn').value.trim();d.settings.registrationOpen=document.getElementById('siteReg').checked;DB.set(d);toast('Settings saved');};
+showTab2("admins");</script>
+</body>
+</html>
