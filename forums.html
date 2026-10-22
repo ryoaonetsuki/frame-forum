@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forums &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap"><div class="page-head"><div><h1>Forums</h1><p>Browse every corner of the community.</p></div></div><div id="cats"></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('explore');
+var d=DB.get();var cats={};d.forums.forEach(function(f){(cats[f.cat]=cats[f.cat]||[]).push(f);});
+document.getElementById('cats').innerHTML=Object.keys(cats).map(function(c){
+  return '<div class="cat-block"><h3 class="cat-title">'+esc(c)+'</h3>'+cats[c].map(function(f){
+    var th=d.threads.filter(function(t){return t.forumId===f.id;});
+    var last=th.slice().sort(function(a,b){return b.createdAt-a.createdAt;})[0];
+    var lu=last?DB.user(last.authorId):null;
+    return '<a class="forum-row" href="forum.html?id='+f.id+'"><div class="forum-ic"><i class="ph-bold '+f.icon+'"></i></div><div class="forum-main"><b>'+esc(f.name)+'</b><p>'+esc(f.desc)+'</p></div><div class="forum-stats"><div><b>'+th.length+'</b><span>Threads</span></div><div><b>'+(last?timeAgo(last.createdAt):'—')+'</b><span>Last post</span></div></div></a>';
+  }).join('')+'</div>';
+}).join('');</script>
+</body>
+</html>
