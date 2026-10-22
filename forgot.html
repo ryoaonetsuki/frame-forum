@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reset password &mdash; FRAME</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script>(function(){try{var a="user_preferred_theme",b="user_preferred_style",h=document.documentElement;h.setAttribute("data-theme",localStorage.getItem(a)||"dark");var s=localStorage.getItem(b);if(s){if(s.indexOf("linear-gradient")===0){var m=s.match(/#([0-9a-f]{6}|[0-9a-f]{3})/i);h.style.setProperty("--keycolor",m?m[0]:"#2970a3");h.style.setProperty("--key-background",s);}else{h.style.setProperty("--keycolor",s);h.style.setProperty("--key-background",s);}}}catch(e){}})();</script>
+</head>
+<body>
+<div id="chrome-header"></div>
+<main class="page-wrap">
+<div class="auth-wrap"><div class="auth-card">
+<h1>Reset password</h1><p class="sub">Enter your email and we will send a reset link.</p>
+<div class="ferr" id="err"></div>
+<div id="done" style="display:none" class="card"><i class="ph-bold ph-check-circle" style="color:#3ecf7a;font-size:28px"></i><p style="margin:10px 0 0">If an account exists for <b id="doneEmail"></b>, a reset link is on its way. (Demo — no email is actually sent.)</p></div>
+<div id="formBox"><div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+<button class="btn btn-primary btn-block" onclick="doForgot()">Send reset link</button></div>
+<div class="auth-alt"><a href="login.html">Back to log in</a></div>
+</div></div></main>
+<div id="chrome-footer"></div>
+<div id="chrome-nav"></div>
+<div id="chrome-sheet"></div>
+<div id="chrome-appearance"></div>
+<script src="assets/app.js"></script>
+<script>applyTheme();Chrome.mount('home');
+window.doForgot=function(){
+  var e=document.getElementById('email').value.trim();var er=document.getElementById('err');
+  if(e.indexOf('@')<0){er.textContent='Enter a valid email.';er.style.display='block';return;}
+  document.getElementById('formBox').style.display='none';document.getElementById('done').style.display='';
+  document.getElementById('doneEmail').textContent=e;
+};</script>
+</body>
+</html>
